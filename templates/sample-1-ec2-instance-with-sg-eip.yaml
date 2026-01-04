@@ -10,20 +10,20 @@ Parameters:
       - t3.small
       - t3.medium
     Description: EC2 instance type
-  
+
   AMIId:
     Type: AWS::EC2::Image::Id
-    Description: AMI ID for the EC2 instance (use Amazon Linux 2023 AMI for your region)
-  
+    Description: 'AMI ID for the EC2 instance (use Amazon Linux 2023 AMI for your region)'
+
   AllowedSSHCIDR:
     Type: String
     Default: 0.0.0.0/0
-    Description: CIDR block allowed for SSH access (default: 0.0.0.0/0 for all IPs)
-  
+    Description: 'CIDR block allowed for SSH access (default: 0.0.0.0/0 for all IPs)'
+
   AllowedServerCIDR:
     Type: String
     Default: 0.0.0.0/0
-    Description: CIDR block allowed for server access (HTTP/HTTPS, default: 0.0.0.0/0 for all IPs)
+    Description: 'CIDR block allowed for server access (HTTP/HTTPS, default: 0.0.0.0/0 for all IPs)'
 
 Resources:
   # SSH Security Group
@@ -47,7 +47,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: !Sub '${AWS::StackName}-server-sg'
-      GroupDescription: Security group for server access (HTTP/HTTPS)
+      GroupDescription: 'Security group for server access (HTTP/HTTPS)'
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
@@ -98,25 +98,25 @@ Outputs:
     Value: !Ref MyEC2Instance
     Export:
       Name: !Sub '${AWS::StackName}-InstanceId'
-  
+
   SSHSecurityGroupId:
     Description: Security Group ID for SSH access
     Value: !Ref SSHSecurityGroup
     Export:
       Name: !Sub '${AWS::StackName}-SSHSecurityGroupId'
-  
+
   ServerSecurityGroupId:
     Description: Security Group ID for server access
     Value: !Ref ServerSecurityGroup
     Export:
       Name: !Sub '${AWS::StackName}-ServerSecurityGroupId'
-  
+
   ElasticIPAddress:
     Description: Elastic IP address assigned to the EC2 instance
     Value: !Ref ElasticIP
     Export:
       Name: !Sub '${AWS::StackName}-ElasticIPAddress'
-  
+
   ElasticIPAllocationId:
     Description: Allocation ID of the Elastic IP
     Value: !GetAtt ElasticIP.AllocationId
