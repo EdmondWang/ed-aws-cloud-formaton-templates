@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Minimal CloudFormation template to create an EC2 instance'
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+      - t3.micro
+      - t3.small
+      - t3.medium
+    Description: EC2 instance type
+  
+  AMIId:
+    Type: AWS::EC2::Image::Id
+    Description: AMI ID for the EC2 instance (use Amazon Linux 2023 AMI for your region)
+
+Resources:
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AMIId
+      InstanceType: !Ref InstanceType
+      Tags:
+        - Key: Name
+          Value: SampleEC2Instance
+
+Outputs:
+  InstanceId:
+    Description: Instance ID of the EC2 instance
+    Value: !Ref MyEC2Instance
+    Export:
+      Name: !Sub '${AWS::StackName}-InstanceId'
+
