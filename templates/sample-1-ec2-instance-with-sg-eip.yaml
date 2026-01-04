@@ -1,0 +1,125 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template to create an EC2 instance with SSH security group, server security group, and Elastic IP'
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+      - t3.micro
+      - t3.small
+      - t3.medium
+    Description: EC2 instance type
+  
+  AMIId:
+    Type: AWS::EC2::Image::Id
+    Description: AMI ID for the EC2 instance (use Amazon Linux 2023 AMI for your region)
+  
+  AllowedSSHCIDR:
+    Type: String
+    Default: 0.0.0.0/0
+    Description: CIDR block allowed for SSH access (default: 0.0.0.0/0 for all IPs)
+  
+  AllowedServerCIDR:
+    Type: String
+    Default: 0.0.0.0/0
+    Description: CIDR block allowed for server access (HTTP/HTTPS, default: 0.0.0.0/0 for all IPs)
+
+Resources:
+  # SSH Security Group
+  SSHSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub '${AWS::StackName}-ssh-sg'
+      GroupDescription: Security group for SSH access to EC2 instance
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref AllowedSSHCIDR
+          Description: Allow SSH access
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-SSH-SecurityGroup'
+
+  # Server Security Group
+  ServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub '${AWS::StackName}-server-sg'
+      GroupDescription: Security group for server access (HTTP/HTTPS)
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref AllowedServerCIDR
+          Description: Allow HTTP access
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref AllowedServerCIDR
+          Description: Allow HTTPS access
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Server-SecurityGroup'
+
+  # Elastic IP
+  ElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-ElasticIP'
+
+  # EC2 Instance
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AMIId
+      InstanceType: !Ref InstanceType
+      SecurityGroupIds:
+        - !Ref SSHSecurityGroup
+        - !Ref ServerSecurityGroup
+      Tags:
+        - Key: Name
+          Value: SampleEC2Instance
+
+  # Associate Elastic IP with EC2 Instance
+  ElasticIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      InstanceId: !Ref MyEC2Instance
+      AllocationId: !GetAtt ElasticIP.AllocationId
+
+Outputs:
+  InstanceId:
+    Description: Instance ID of the EC2 instance
+    Value: !Ref MyEC2Instance
+    Export:
+      Name: !Sub '${AWS::StackName}-InstanceId'
+  
+  SSHSecurityGroupId:
+    Description: Security Group ID for SSH access
+    Value: !Ref SSHSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-SSHSecurityGroupId'
+  
+  ServerSecurityGroupId:
+    Description: Security Group ID for server access
+    Value: !Ref ServerSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-ServerSecurityGroupId'
+  
+  ElasticIPAddress:
+    Description: Elastic IP address assigned to the EC2 instance
+    Value: !Ref ElasticIP
+    Export:
+      Name: !Sub '${AWS::StackName}-ElasticIPAddress'
+  
+  ElasticIPAllocationId:
+    Description: Allocation ID of the Elastic IP
+    Value: !GetAtt ElasticIP.AllocationId
+    Export:
+      Name: !Sub '${AWS::StackName}-ElasticIPAllocationId'
+
